@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strain Text Converter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #e0e0e0;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #a0a0b0;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #c0c0d0;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 130px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color: #4ade80;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin: 18px 0 24px;
+    }
+
+    button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-convert {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+    }
+
+    .btn-convert:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-clear {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ccc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .btn-clear:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .output-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      border-radius: 12px;
+      padding: 18px 20px;
+      min-height: 70px;
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: #4ade80;
+      word-break: break-word;
+      line-height: 1.5;
+      user-select: all;
+    }
+
+    .output-label {
+      margin-bottom: 10px;
+    }
+
+    .hint {
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: #888;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .examples {
+      margin-top: 16px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: #aaa;
+      line-height: 1.6;
+    }
+
+    .examples strong {
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌿 Strain Text Converter</h1>
+    <p class="subtitle">NAME → UPPERCASE • pop → pops • keep genetics • clean tags</p>
+
+    <label for="input">Input Text</label>
+    <textarea id="input" placeholder="Paste here...&#10;Example:&#10;Blockberry pop (Black Cherry Punch x Tropicana Cookies) [Old Name: Super boof pop] [SZAO - 25.8.26 - CHECK]"></textarea>
+
+    <div class="btn-row">
+      <button class="btn-convert" onclick="convertText()">Convert</button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+    </div>
+
+    <label class="output-label">Formatted Output</label>
+    <div class="output-box" id="output">Ready...</div>
+
+    <div class="examples">
+      <strong>Example:</strong><br>
+      Input:<br>
+      Blockberry pop (Black Cherry Punch x Tropicana Cookies) [Old Name: Super boof pop] [SZAO - 25.8.26 - CHECK]<br><br>
+      Output:<br>
+      <strong>BLOCKBERRY pops (Black Cherry Punch x Tropicana Cookies)</strong>
+    </div>
+
+    <p class="hint">
+      Rules: Strain name → UPPERCASE | "pop" → "pops" | "big" → "bigs" | keep genetics | remove [tags]
+    </p>
+  </div>
+
+  <script>
+    function convertText() {
+      let text = document.getElementById('input').value.trim();
+      if (!text) {
+        document.getElementById('output').textContent = 'Please enter some text...';
+        return;
+      }
+
+      // 1. Remove everything inside square brackets [ ... ]
+      text = text.replace(/\[[^\]]*\]/g, '');
+
+      // 2. Clean extra spaces
+      text = text.replace(/\s+/g, ' ').trim();
+
+      // 3. Fix "pop" → "pops" and "big" → "bigs" (force lowercase)
+      text = text.replace(/\bpop\b/gi, 'pops');
+      text = text.replace(/\bpops\b/gi, 'pops');
+      text = text.replace(/\bbig\b/gi, 'bigs');
+      text = text.replace(/\bbigs\b/gi, 'bigs');
+
+      // 4. Separate strain name from genetics (parentheses)
+      //    Make the part BEFORE the first "(" UPPERCASE
+      //    Keep the genetics part as-is
+      const parenIndex = text.indexOf('(');
+
+      if (parenIndex !== -1) {
+        let namePart = text.substring(0, parenIndex).trim().toUpperCase();
+        let geneticPart = text.substring(parenIndex).trim();
+
+        // Make sure "pops" / "bigs" stay lowercase even after uppercasing the name
+        namePart = namePart.replace(/\bPOPS\b/g, 'pops');
+        namePart = namePart.replace(/\bBIGS\b/g, 'bigs');
+
+        text = namePart + ' ' + geneticPart;
+      } else {
+        // No parentheses → just uppercase everything, then fix pops/bigs
+        text = text.toUpperCase();
+        text = text.replace(/\bPOPS\b/g, 'pops');
+        text = text.replace(/\bBIGS\b/g, 'bigs');
+      }
+
+      // 5. Final clean
+      text = text.replace(/\s+/g, ' ').trim();
+
+      document.getElementById('output').textContent = text || 'Could not format...';
+    }
+
+    function clearAll() {
+      document.getElementById('input').value = '';
+      document.getElementById('output').textContent = 'Ready...';
+    }
+
+    // Ctrl + Enter to convert
+    document.getElementById('input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        convertText();
+      }
+    });
+  </script>
+</body>
+</html>
