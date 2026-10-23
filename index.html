@@ -159,7 +159,7 @@
 <body>
   <div class="container">
     <h1>🌿 Strain Text Converter</h1>
-    <p class="subtitle">NAME → UPPERCASE • pop → pops • keep genetics • clean tags</p>
+    <p class="subtitle">Multi-line support • NAME → UPPERCASE • pop/big → pops/bigs • remove old names</p>
 
     <label for="input">Input Text</label>
     <textarea id="input" placeholder="Paste here...&#10;Example:&#10;Blockberry pop (Black Cherry Punch x Tropicana Cookies) [Old Name: Super boof pop] [SZAO - 25.8.26 - CHECK]"></textarea>
@@ -173,63 +173,78 @@
     <div class="output-box" id="output">Ready...</div>
 
     <div class="examples">
-      <strong>Example:</strong><br>
-      Input:<br>
-      Blockberry pop (Black Cherry Punch x Tropicana Cookies) [Old Name: Super boof pop] [SZAO - 25.8.26 - CHECK]<br><br>
-      Output:<br>
-      <strong>BLOCKBERRY pops (Black Cherry Punch x Tropicana Cookies)</strong>
+      <strong>Rules:</strong><br>
+      • Strain name → <strong>UPPERCASE</strong><br>
+      • pop → pops &nbsp;|&nbsp; big → bigs (always lowercase)<br>
+      • Keep genetics in ( parentheses ) as-is<br>
+      • Remove [Old Name: ...] and (old name: ...) notes<br>
+      • Works with multiple lines / multiple strains
     </div>
 
     <p class="hint">
-      Rules: Strain name → UPPERCASE | "pop" → "pops" | "big" → "bigs" | keep genetics | remove [tags]
+      Paste one or many strains (each on its own line) → hit Convert
     </p>
   </div>
 
   <script>
     function convertText() {
-      let text = document.getElementById('input').value.trim();
-      if (!text) {
+      let raw = document.getElementById('input').value.trim();
+      if (!raw) {
         document.getElementById('output').textContent = 'Please enter some text...';
         return;
       }
 
-      // 1. Remove everything inside square brackets [ ... ]
-      text = text.replace(/\[[^\]]*\]/g, '');
+      // Process each line separately (multi-strain support)
+      const lines = raw.split(/\n+/);
+      const results = [];
 
-      // 2. Clean extra spaces
-      text = text.replace(/\s+/g, ' ').trim();
+      for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
 
-      // 3. Fix "pop" → "pops" and "big" → "bigs" (force lowercase)
-      text = text.replace(/\bpop\b/gi, 'pops');
-      text = text.replace(/\bpops\b/gi, 'pops');
-      text = text.replace(/\bbig\b/gi, 'bigs');
-      text = text.replace(/\bbigs\b/gi, 'bigs');
+        // 1. Remove [Old Name: ...] and any other [ ... ] tags
+        line = line.replace(/\[[^\]]*\]/g, '');
 
-      // 4. Separate strain name from genetics (parentheses)
-      //    Make the part BEFORE the first "(" UPPERCASE
-      //    Keep the genetics part as-is
-      const parenIndex = text.indexOf('(');
+        // 2. Remove (old name: ...) style notes (case-insensitive)
+        line = line.replace(/\(old\s*name\s*:[^)]*\)/gi, '');
 
-      if (parenIndex !== -1) {
-        let namePart = text.substring(0, parenIndex).trim().toUpperCase();
-        let geneticPart = text.substring(parenIndex).trim();
+        // 3. Clean extra spaces
+        line = line.replace(/\s+/g, ' ').trim();
+        if (!line) continue;
 
-        // Make sure "pops" / "bigs" stay lowercase even after uppercasing the name
-        namePart = namePart.replace(/\bPOPS\b/g, 'pops');
-        namePart = namePart.replace(/\bBIGS\b/g, 'bigs');
+        // 4. Fix pop → pops / big → bigs (force lowercase)
+        line = line.replace(/\bpop\b/gi, 'pops');
+        line = line.replace(/\bpops\b/gi, 'pops');
+        line = line.replace(/\bbig\b/gi, 'bigs');
+        line = line.replace(/\bbigs\b/gi, 'bigs');
 
-        text = namePart + ' ' + geneticPart;
-      } else {
-        // No parentheses → just uppercase everything, then fix pops/bigs
-        text = text.toUpperCase();
-        text = text.replace(/\bPOPS\b/g, 'pops');
-        text = text.replace(/\bBIGS\b/g, 'bigs');
+        // 5. Uppercase the strain name (everything before the first genetics parenthesis)
+        //    Keep the genetics ( ... ) as-is
+        const parenIndex = line.indexOf('(');
+
+        if (parenIndex !== -1) {
+          let namePart = line.substring(0, parenIndex).trim().toUpperCase();
+          let geneticPart = line.substring(parenIndex).trim();
+
+          // Keep pops / bigs lowercase
+          namePart = namePart.replace(/\bPOPS\b/g, 'pops');
+          namePart = namePart.replace(/\bBIGS\b/g, 'bigs');
+
+          line = (namePart + ' ' + geneticPart).trim();
+        } else {
+          // No genetics parenthesis → uppercase whole line, then fix pops/bigs
+          line = line.toUpperCase();
+          line = line.replace(/\bPOPS\b/g, 'pops');
+          line = line.replace(/\bBIGS\b/g, 'bigs');
+        }
+
+        // Final clean
+        line = line.replace(/\s+/g, ' ').trim();
+        if (line) results.push(line);
       }
 
-      // 5. Final clean
-      text = text.replace(/\s+/g, ' ').trim();
-
-      document.getElementById('output').textContent = text || 'Could not format...';
+      const output = results.join(' ');
+      document.getElementById('output').textContent = output || 'Could not format...';
     }
 
     function clearAll() {
